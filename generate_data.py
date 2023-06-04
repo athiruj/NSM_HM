@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # manage & generate data 
 
 import sys
@@ -7,7 +7,7 @@ import glob
 
 import numpy
 import librosa
-from logger import logger
+from logging_con import logger
 
 from tqdm import tqdm
 
@@ -172,6 +172,3 @@ def dataset_generator(target_dir,
     logger.info("eval_file  num : {num}".format(num=len(eval_files)))
 
     return train_files, train_labels, eval_files, eval_labels
-=======
-
->>>>>>> 8cc25cec214a60c63fec92ee28badb7526e1a247
