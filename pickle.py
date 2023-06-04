@@ -1,4 +1,8 @@
 # pickle I/O #
+
+import pickle
+import logger
+
 def save_pickle(filename, save_data):
     """
     picklenize the data.
