@@ -1,0 +1,5 @@
+base_directory : ./dataset
+pickle_directory: ./pickle
+model_directory: ./model
+result_directory: ./result
+result_file: result.yaml
