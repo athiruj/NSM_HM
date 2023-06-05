@@ -11,6 +11,24 @@ class visualizer(object):
         self.fig = self.plt.figure(figsize=(30, 10))
         # width & height space
         self.plt.subplots_adjust(wspace=0.3, hspace=0.3)
+   
+    # Signal Plot
+
+    def signal_plot(self,y):
+        ax = self.fig.add_subplot(1,1,1)
+        ax.plot(y);
+        ax.set_title('Signal');
+        ax.set_xlabel('Time (samples)');
+        ax.set_ylabel('Amplitude');
+
+    # Spectrum Plot
+
+    def spec_plot(self,ft):
+        ax = self.fig.add_subplot(1,1,1)
+        ax.plot(ft)
+        ax.set_title('Spectrum');
+        ax.set_xlabel('Frequency Bin');
+        ax.set_ylabel('Amplitude');
 
     # Loss Plot
 
@@ -24,6 +42,7 @@ class visualizer(object):
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Loss")
         ax.legend(["Train", "Test"], loc="upper right")
+
 
     # Save Figure
     
