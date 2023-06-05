@@ -1,7 +1,7 @@
 # pickle I/O #
 
 import pickle
-from logging_con import logger
+from logger import logger
 
 def save_pickle(filename, save_data):
     """
