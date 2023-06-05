@@ -117,7 +117,7 @@ def file_to_vector_array(
     dims = n_mels * frames
 
     # 02 generate melspectrogram using librosa (**kwargs == param["librosa"])
-    # ๒ คำนวณค่า 
+    # ๒ คำนวณค่าสเปกโตรแกรม ในความถี่ถูกแปลงเป็นสเกลเมล โดยใช้ Librosa 
     sr, y = demux_wav(file_name)
     mel_spectrogram = librosa.feature.melspectrogram(
         y=y,
