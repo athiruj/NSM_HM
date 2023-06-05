@@ -6,12 +6,13 @@ import glob
 
 import numpy
 import librosa
-from logging_con import logger
+from logger import logger
 
 from tqdm import tqdm
 
+
 ########################################################################
-# wav file input
+# Load wav file input
 ########################################################################
 
 
@@ -19,6 +20,7 @@ def file_load(wav_name, mono=False):
     """
     load .wav file.
 
+    # Parameters :
     wav_name : str
         target .wav file
     sampling_rate : int
@@ -26,16 +28,18 @@ def file_load(wav_name, mono=False):
     mono : boolean
         When load a multi channels file and this param True, the returned data will be merged for mono data
 
-    return : numpy.array( float )
+    # Return :
+    : numpy.array( float )
     """
     try:
-        return librosa.load(wav_name, sr=None, mono=mono)
+        y, sr = librosa.load(wav_name, sr=None, mono=mono)
+        return y, sr
     except:
         logger.error("file_broken or not exists!! : {}".format(wav_name))
 
 
 ########################################################################
-
+# Demux wav
 ########################################################################
 
 
@@ -43,17 +47,19 @@ def demux_wav(wav_name, channel=0):
     """
     demux .wav file.
 
-    wav_name : str
+    Enabled to read multiple sampling rates.
+    Enabled even one channel.
+
+    # Parameters :
+    `wav_name` : str
         target .wav file
-    channel : int
+    `channel` : int
         target channel number
 
-    return : numpy.array( float )
+    # Return :
+    numpy.array( float )
         demuxed mono data
 
-    Enabled to read multiple sampling rates.
-
-    Enabled even one channel.
     """
     try:
         multi_channel_data, sr = file_load(wav_name)
@@ -67,37 +73,68 @@ def demux_wav(wav_name, channel=0):
 
 
 ########################################################################
-# feature extractor
+# File to vector np array
 ########################################################################
+
+
 def file_to_vector_array(
-    file_name, n_mels=64, frames=5, n_fft=1024, hop_length=512, power=2.0
+    file_name, 
+    n_mels=64, 
+    frames=5, 
+    n_fft=1024, 
+    hop_length=512, 
+    power=2.0
 ):
     """
-    convert file_name to a vector array.
+    convert file`[file_name]` to a vector array.
 
-    file_name : str
+    # Parameters :
+    `file_name` : str
         target .wav file
 
-    return : numpy.array( numpy.array( float ) )
+    `n_mels` : int > 0 [scalar]
+        number of Mel bands to generate
+
+    `frames` : int
+        length of vector size
+
+    `n_fft` : int > 0 [scalar]
+        length of the FFT window
+
+    `hop_length` : int > 0 [scalar]
+        number of samples between successive frames. See librosa.stft
+    
+    `power` : float > 0 [scalar] 
+        Exponent for the magnitude melspectrogram. e.g., 1 for energy, 2 for power, etc
+  
+    # Return :
+    numpy.array( numpy.array( float ) )
         vector array
         * dataset.shape = (dataset_size, fearture_vector_length)
     """
-    # calculate the number of dimensions
-    # คำนวณมิติของชุดข้อมูล
+    # 01 calculate the number of dimensions
+    # ๑ คำนวณมิติของชุดข้อมูล
     dims = n_mels * frames
 
-    # generate melspectrogram using librosa (**kwargs == param["librosa"])
+    # 02 generate melspectrogram using librosa (**kwargs == param["librosa"])
+    # ๒ คำนวณค่า 
     sr, y = demux_wav(file_name)
     mel_spectrogram = librosa.feature.melspectrogram(
-        y=y, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels, power=power
+        y=y,
+        S=None,
+        sr=sr,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        n_mels=n_mels,
+        power=power,
     )
 
-    # convert melspectrogram to log mel energy
+    # 03 convert melspectrogram to log mel energy
     log_mel_spectrogram = (
         20.0 / power * numpy.log10(mel_spectrogram + sys.float_info.epsilon)
     )
 
-    # calculate total vector size
+    # 04 calculate total vector size
     vector_array_size = len(log_mel_spectrogram[0, :]) - frames + 1
 
     # 05 skip too short clips
@@ -113,6 +150,11 @@ def file_to_vector_array(
         ].T
 
     return vector_array
+
+
+########################################################################
+# List to vector np array
+########################################################################
 
 
 def list_to_vector_array(
@@ -152,7 +194,7 @@ def dataset_generator(
 ):
     """
     generater dataset
-    
+
     taeget_drr: str
     """
     logger.info("target_dir : {}".format(target_dir))
