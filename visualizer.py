@@ -1,6 +1,8 @@
 # Visualizer #
 
 import matplotlib.pyplot as plt
+import librosa
+import numpy
 
 class visualizer(object):
     
@@ -29,6 +31,16 @@ class visualizer(object):
         ax.set_title('Spectrum');
         ax.set_xlabel('Frequency Bin');
         ax.set_ylabel('Amplitude');
+    
+    # Spectrum Power Plot
+
+    def spec_power_plot(self,S,sr):
+        log_S = librosa.power_to_db(S, ref=numpy.max)
+        ax = self.fig.add_subplot(1,1,1)
+        librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
+        ax.title('mel power spectrogram')
+        ax.colorbar(format='%+02.0f dB')
+        ax.tight_layout()
 
     # Loss Plot
 
