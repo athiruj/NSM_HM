@@ -129,7 +129,8 @@ def file_to_vector_array(
         power=power,
     )
 
-    # 03 convert melspectrogram to log mel energy
+    # 03 convert melspectrogram to `log mel energy`(decibel (dB) units) see librosa.power_to_dB
+    # ๓ แปลงค่า เมลสเปกโตรแกรม เป็น หน่วยเดซิเบล(dB) โดนใช้ค่า e(epsilon) เป็น อ้างอิง (ref) 
     log_mel_spectrogram = (
         20.0 / power * numpy.log10(mel_spectrogram + sys.float_info.epsilon)
     )
