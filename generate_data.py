@@ -30,7 +30,7 @@ def file_load(wav_name, mono=False):
 
     # Return :
     : numpy.array( float )
-    """
+    """ 
     try:
         y, sr = librosa.load(wav_name, sr=None, mono=mono)
         return y, sr
@@ -78,12 +78,7 @@ def demux_wav(wav_name, channel=0):
 
 
 def file_to_vector_array(
-    file_name, 
-    n_mels=64, 
-    frames=5, 
-    n_fft=1024, 
-    hop_length=512, 
-    power=2.0
+    file_name, n_mels=64, frames=5, n_fft=1024, hop_length=512, power=2.0
 ):
     """
     convert file`[file_name]` to a vector array.
@@ -103,10 +98,10 @@ def file_to_vector_array(
 
     `hop_length` : int > 0 [scalar]
         number of samples between successive frames. See librosa.stft
-    
-    `power` : float > 0 [scalar] 
+
+    `power` : float > 0 [scalar]
         Exponent for the magnitude melspectrogram. e.g., 1 for energy, 2 for power, etc
-  
+
     # Return :
     numpy.array( numpy.array( float ) )
         vector array
@@ -117,7 +112,7 @@ def file_to_vector_array(
     dims = n_mels * frames
 
     # 02 generate melspectrogram using librosa (**kwargs == param["librosa"])
-    # ๒ คำนวณค่าสเปกโตรแกรม ในความถี่ถูกแปลงเป็นสเกลเมล โดยใช้ Librosa 
+    # ๒ คำนวณค่าสเปกโตรแกรม ในความถี่ถูกแปลงเป็นสเกลเมล โดยใช้ Librosa
     sr, y = demux_wav(file_name)
     mel_spectrogram = librosa.feature.melspectrogram(
         y=y,
@@ -130,19 +125,22 @@ def file_to_vector_array(
     )
 
     # 03 convert melspectrogram to `log mel energy`(decibel (dB) units) see librosa.power_to_dB
-    # ๓ แปลงค่า เมลสเปกโตรแกรม เป็น หน่วยเดซิเบล(dB) โดนใช้ค่า e(epsilon) เป็น อ้างอิง (ref) 
+    # ๓ แปลงค่า เมลสเปกโตรแกรม เป็น หน่วยเดซิเบล(dB) โดนใช้ค่า e(epsilon) เป็น อ้างอิง (ref)
     log_mel_spectrogram = (
         20.0 / power * numpy.log10(mel_spectrogram + sys.float_info.epsilon)
     )
 
     # 04 calculate total vector size
+    # ๔ คำนวณขนาดโดยรวมของข้อมูลเวกเตอร์
     vector_array_size = len(log_mel_spectrogram[0, :]) - frames + 1
 
     # 05 skip too short clips
+    # ๕ ตรวจสอบขนาดของข้อมูลเวกเตอร์
     if vector_array_size < 1:
         return numpy.empty((0, dims), float)
 
     # 06 generate feature vectors by concatenating multi_frames
+    # ๖ สร้างเวกเตอร์คุณสมบัติโดยการต่อ multi_frames
     vector_array = numpy.zeros((vector_array_size, dims), float)
 
     for t in range(frames):
@@ -162,9 +160,11 @@ def list_to_vector_array(
     file_list, msg="calc...", n_mels=64, frames=5, n_fft=1024, hop_length=512, power=2.0
 ):
     # 01 calculate the number of dimensions
+    # ๑ คำนวณมิติของชุดข้อมูล
     dims = n_mels * frames
 
-    # 02 loop of file_to_vectorarray
+    # 02 loop of file_to_vector_array
+    # ๒ วนซ้ำฟังชั่น file_to_vector_array เพื่อทำการแปลงไฟล์เป็นชุดข้อมูลเวกเตอร์
     for idx in tqdm(range(len(file_list)), desc=msg):
         vector_array = file_to_vector_array(
             file_list[idx],
@@ -174,7 +174,7 @@ def list_to_vector_array(
             hop_length=hop_length,
             power=power,
         )
-
+        # ตรวจสอบชุดข้อมูลว่าง
         if idx == 0:
             dataset = numpy.zeros((vector_array.shape[0] * len(file_list), dims), float)
 
@@ -196,11 +196,13 @@ def dataset_generator(
     """
     generater dataset
 
-    taeget_drr: str
+    target_dir: str
+        target directory file
     """
     logger.info("target_dir : {}".format(target_dir))
 
     # 01 normal list generate
+    # ๑ สร้างชุดที่อยู่ของข้อมูล ปกติ ภายใน target_dir
     normal_files = sorted(
         glob.glob(
             os.path.abspath(
@@ -210,13 +212,14 @@ def dataset_generator(
             )
         )
     )
-    print(normal_files)
+    # print(normal_files)
 
     normal_labels = numpy.zeros(len(normal_files))
     if len(normal_files) == 0:
         logger.exception("no_wav_data!!")
 
     # 02 abnormal list generate
+    # ๒ สร้างชุดที่อยู่ของข้อมูล ผิดปกติ ภายใน target_dir
     abnormal_files = sorted(
         glob.glob(
             os.path.abspath(
@@ -226,13 +229,14 @@ def dataset_generator(
             )
         )
     )
-    print(abnormal_files)
+    # print(abnormal_files)
 
     abnormal_labels = numpy.ones(len(abnormal_files))
     if len(abnormal_files) == 0:
         logger.exception("no_wav_data!!")
 
     # 03 separate train & eval
+    # ๓ จัดเตรียมข้อมูลที่ใช้ในการ เทรน และ ประเมิน
     train_files = normal_files[len(abnormal_files) :]
     train_labels = normal_labels[len(abnormal_files) :]
 
