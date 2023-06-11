@@ -21,7 +21,9 @@ with open("./config/model_config.yaml") as stream:
 
 
 # make output directory
-if not os.path.exists(dir_param["root_dir"]):
+if os.path.exists(dir_param["root_dir"]):
+    print("============== Directory ALREADY ==============")
+else:
     os.makedirs("{root}".format(root=dir_param["root_dir"]), exist_ok=True)
 
     os.makedirs(
@@ -44,7 +46,7 @@ if not os.path.exists(dir_param["root_dir"]):
 # load base_directory list
 dirs = sorted(
     glob.glob(
-        os.path.abspath(".{dataset}/*/*/*".format(dataset=dir_param["dataset_dir"]))
+        os.path.abspath("{dataset}/*/*/*".format(dataset=dir_param["dataset_dir"]))
     )
 )
 
@@ -121,85 +123,85 @@ for dir_idx, target_dir in enumerate(dirs):
         machine_type=machine_type, machine_id=machine_id, db=db
     )
 
-# dataset generator
-print("============== DATASET GENERATOR ==============")
+    # dataset generator
+    print("============== DATASET GENERATOR ==============")
 
-if (
-    os.path.exists(train_pickle)
-    and os.path.exists(eval_files_pickle)
-    and os.path.exists(eval_labels_pickle)
-):
-    train_data = pickler.load_pickle(train_pickle)
-    eval_files = pickler.load_pickle(eval_files_pickle)
-    eval_labels = pickler.load_pickle(eval_labels_pickle)
-else:
-    (
-        train_files,
-        train_labels,
-        eval_files,
-        eval_labels,
-    ) = generate_data.dataset_generator(target_dir)
+    if (
+        os.path.exists(train_pickle) and os.path.exists(eval_files_pickle) and os.path.exists(eval_labels_pickle)
+    ):
+        train_data = pickler.load_pickle(train_pickle)
+        eval_files = pickler.load_pickle(eval_files_pickle)
+        eval_labels = pickler.load_pickle(eval_labels_pickle)
+    else:
+        (
+            train_files,
+            train_labels,
+            eval_files,
+            eval_labels,
+        ) = generate_data.dataset_generator(target_dir)
 
-    train_data = generate_data.list_to_vector_array(
-        train_files,
-        msg="generate train_dataset",
-        n_mels=model_param["feature"]["n_mels"],
-        frames=model_param["feature"]["frames"],
-        n_fft=model_param["feature"]["n_fft"],
-        hop_length=model_param["feature"]["hop_length"],
-        power=model_param["feature"]["power"],
-    )
+        train_data = generate_data.list_to_vector_array(
+            train_files,
+            msg="generate train_dataset",
+            n_mels=model_param["feature"]["n_mels"],
+            frames=model_param["feature"]["frames"],
+            n_fft=model_param["feature"]["n_fft"],
+            hop_length=model_param["feature"]["hop_length"],
+            power=model_param["feature"]["power"],
+        )
 
-    pickler.save_pickle(train_pickle, train_data)
-    pickler.save_pickle(eval_files_pickle, eval_files)
-    pickler.save_pickle(eval_labels_pickle, eval_labels)
+        pickler.save_pickle(train_pickle, train_data)
+        pickler.save_pickle(eval_files_pickle, eval_files)
+        pickler.save_pickle(eval_labels_pickle, eval_labels)
 
-# model training #
-model = keras_model(model_param["feature"]["n_mels"] * model_param["feature"]["frames"])
-model.summary()
+    # model training #
+    model = keras_model(model_param["feature"]["n_mels"] * model_param["feature"]["frames"])
+    model.summary()
 
-# training #
-if os.path.exists(model_file):
-    model.load_weights(model_file)
-    print("============== MODEL ALREADY ==============")
-else:
-    model.compile(**model_param["fit"]["compile"])
-    history = model.fit(
-        train_data,
-        train_data,
-        epochs=model_param["fit"]["epochs"],
-        batch_size=model_param["fit"]["batch_size"],
-        shuffle=model_param["fit"]["shuffle"],
-        validation_split=model_param["fit"]["validation_split"],
-        verbose=model_param["fit"]["verbose"],
-    )
-    visualizer_train = visualizer()
-    visualizer_train.loss_plot(history.history["loss"], history.history["val_loss"])
-    visualizer_train.save_figure(history_img)
-    visualizer_train.show()
-    model.save_weights(model_file)
+    # training #
+    if os.path.exists(model_file):
+        model.load_weights(model_file)
+        print("============== MODEL ALREADY ==============")
+    else:
+        model.compile(**model_param["fit"]["compile"])
+        history = model.fit(
+            train_data,
+            train_data,
+            epochs=model_param["fit"]["epochs"],
+            batch_size=model_param["fit"]["batch_size"],
+            shuffle=model_param["fit"]["shuffle"],
+            validation_split=model_param["fit"]["validation_split"],
+            verbose=model_param["fit"]["verbose"],
+        )
+        visualizer_train = visualizer()
+        visualizer_train.loss_plot(history.history["loss"], history.history["val_loss"])
+        visualizer_train.save_figure(history_img)
+        visualizer_train.show()
+        model.save_weights(model_file)
 
-# evaluation
-print("============== EVALUATION ==============")
-y_pred = [0. for i in eval_labels]
-y_true = eval_labels
-for num, file_name in tqdm(enumerate(eval_files), total=len(eval_files)):
-    try:
-        data = generate_data.file_to_vector_array(file_name,
-                                    n_mels=model_param["feature"]["n_mels"],
-                                    frames=model_param["feature"]["frames"],
-                                    n_fft=model_param["feature"]["n_fft"],
-                                    hop_length=model_param["feature"]["hop_length"],
-                                    power=model_param["feature"]["power"])
-        error = numpy.mean(numpy.square(data - model.predict(data)), axis=1)
-        y_pred[num] = numpy.mean(error)
-    except:
-        logger.warning("File broken!!: {}".format(file_name))
-score = metrics.roc_auc_score(y_true, y_pred)
-logger.info("AUC : {}".format(score))
-evaluation_result["AUC"] = float(score)
-results[evaluation_result_key] = evaluation_result
-print("===========================")
+    # evaluation
+    print("============== EVALUATION ==============")
+    y_pred = [0.0 for k in eval_labels]
+    y_true = eval_labels
+    for num, file_name in tqdm(enumerate(eval_files), total=len(eval_files)):
+        try:
+            data = generate_data.file_to_vector_array(
+                file_name,
+                n_mels=model_param["feature"]["n_mels"],
+                frames=model_param["feature"]["frames"],
+                n_fft=model_param["feature"]["n_fft"],
+                hop_length=model_param["feature"]["hop_length"],
+                power=model_param["feature"]["power"],
+            )
+            error = numpy.mean(numpy.square(data - model.predict(data)), axis=1)
+            y_pred[num] = numpy.mean(error)
+        except:
+            logger.warning("File broken!!: {}".format(file_name))
+    score = metrics.roc_auc_score(y_true, y_pred)
+    logger.info("AUC : {}".format(score))
+    evaluation_result["AUC"] = float(score)
+    results[evaluation_result_key] = evaluation_result
+    print("===========================")
 
 # output results
 print("\n===========================")

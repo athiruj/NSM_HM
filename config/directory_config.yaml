@@ -1,6 +1,8 @@
-root_result_dir: ./HM_result
 dataset_dir : ../dataset
-pickle_dir: /pickle
-model_dir: /model
-result_dir: /result
+
+root_dir: ./HM_result
+
+pickle_dir: pickle
+model_dir: model
+result_dir: result
 result_file: result.yaml
