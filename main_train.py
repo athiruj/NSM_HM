@@ -176,11 +176,12 @@ else:
     visualizer_train = visualizer()
     visualizer_train.loss_plot(history.history["loss"], history.history["val_loss"])
     visualizer_train.save_figure(history_img)
+    visualizer_train.show()
     model.save_weights(model_file)
 
 # evaluation
 print("============== EVALUATION ==============")
-y_pred = [0. for k in eval_labels]
+y_pred = [0. for i in eval_labels]
 y_true = eval_labels
 for num, file_name in tqdm(enumerate(eval_files), total=len(eval_files)):
     try:
@@ -206,4 +207,3 @@ logger.info("all results -> {}".format(result_file))
 with open(result_file, "w") as f:
     f.write(yaml.dump(results, default_flow_style=False))
 print("===========================")
-########################################################################
