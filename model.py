@@ -3,6 +3,7 @@
 from keras.models import Model
 from keras.layers import Input, Dense
 
+
 def keras_model(inputDim):
     """
     define the keras model
