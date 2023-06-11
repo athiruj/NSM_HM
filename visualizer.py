@@ -5,7 +5,7 @@ import librosa
 import numpy
 
 
-class visualizer_func(object):
+class visualizer(object):
     def __init__(self):
         # create pyplot
         self.plt = plt
