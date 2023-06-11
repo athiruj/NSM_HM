@@ -6,9 +6,9 @@ import glob
 
 import numpy
 import librosa
-from logger import logger
 
 from tqdm import tqdm
+from logger import logger
 
 
 ########################################################################
