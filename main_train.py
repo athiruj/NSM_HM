@@ -167,16 +167,18 @@ for dir_idx, target_dir in enumerate(dirs):
         history = model.fit(
             train_data,
             train_data,
-            epochs=model_param["fit"]["epochs"],
             batch_size=model_param["fit"]["batch_size"],
-            shuffle=model_param["fit"]["shuffle"],
-            validation_split=model_param["fit"]["validation_split"],
+            epochs=model_param["fit"]["epochs"],
             verbose=model_param["fit"]["verbose"],
+            validation_split=model_param["fit"]["validation_split"],
+            shuffle=model_param["fit"]["shuffle"],
         )
         visualizer_train = visualizer()
         visualizer_train.loss_plot(history.history["loss"], history.history["val_loss"])
+        # visualizer_train.precision_plot(history.history["precision"], history.history["val_precision"])
+        # visualizer_train.recall_plot(history.history["recall"], history.history["val_recall"])
         visualizer_train.save_figure(history_img)
-        visualizer_train.show()
+        # visualizer_train.show()
         model.save_weights(model_file)
 
     # evaluation

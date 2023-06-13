@@ -53,6 +53,34 @@ class visualizer(object):
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Loss")
         ax.legend(["Train", "Test"], loc="upper right")
+    
+    # Precision Plot
+
+    def precision_plot(self, precision, val_precision):
+        # create subpolt
+        ax = self.fig.add_subplot(1, 1, 1)
+        ax.cla()
+        ax.plot(precision)
+        ax.plot(val_precision)
+        ax.set_title("Model Precision")
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Precision")
+        ax.legend(["Train", "Test"], loc="upper right")
+    
+    # Precision Plot
+
+    def recall_plot(self, recall, val_recall):
+        # create subpolt
+        ax = self.fig.add_subplot(1, 1, 1)
+        ax.cla()
+        ax.plot(recall)
+        ax.plot(val_recall)
+        ax.set_title("Model Recall")
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Recall")
+        ax.legend(["Train", "Test"], loc="upper right")
+
+
 
     # Save Figure
 
