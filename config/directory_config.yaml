@@ -1,4 +1,4 @@
-dataset_dir : ../dataset
+dataset_dir : ../dataset_test
 
 root_dir: ./HM_result
 

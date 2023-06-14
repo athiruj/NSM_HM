@@ -12,6 +12,8 @@ from visualizer import visualizer
 from model import keras_model
 from logger import logger
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 # load parameter yaml
 with open("./config/directory_config.yaml") as stream:
     dir_param = yaml.safe_load(stream)
@@ -27,19 +29,15 @@ else:
     os.makedirs("{root}".format(root=dir_param["root_dir"]), exist_ok=True)
 
     os.makedirs(
-        "{root}{dir}".format(root=dir_param["root_dir"], dir=dir_param["pickle_dir"]),
+        "{root}/{dir}".format(root=dir_param["root_dir"], dir=dir_param["pickle_dir"]),
         exist_ok=True,
     )
     os.makedirs(
-        "{root}{dir}".format(root=dir_param["root_dir"], dir=dir_param["pickle_dir"]),
+        "{root}/{dir}".format(root=dir_param["root_dir"], dir=dir_param["model_dir"]),
         exist_ok=True,
     )
     os.makedirs(
-        "{root}{dir}".format(root=dir_param["root_dir"], dir=dir_param["model_dir"]),
-        exist_ok=True,
-    )
-    os.makedirs(
-        "{root}{dir}".format(root=dir_param["root_dir"], dir=dir_param["result_dir"]),
+        "{root}/{dir}".format(root=dir_param["root_dir"], dir=dir_param["result_dir"]),
         exist_ok=True,
     )
 
@@ -83,6 +81,15 @@ for dir_idx, target_dir in enumerate(dirs):
         )
     )
 
+    train_labels_pickle = (
+        "{root}/{pickle}/train_labels_{machine_type}_{machine_id}_{db}.pickle".format(
+            root=dir_param["root_dir"],
+            pickle=dir_param["pickle_dir"],
+            machine_type=machine_type,
+            machine_id=machine_id,
+            db=db,
+        )
+    )
     eval_files_pickle = (
         "{root}/{pickle}/eval_files_{machine_type}_{machine_id}_{db}.pickle".format(
             root=dir_param["root_dir"],
@@ -127,9 +134,12 @@ for dir_idx, target_dir in enumerate(dirs):
     print("============== DATASET GENERATOR ==============")
 
     if (
-        os.path.exists(train_pickle) and os.path.exists(eval_files_pickle) and os.path.exists(eval_labels_pickle)
+        os.path.exists(train_pickle)
+        and os.path.exists(eval_files_pickle)
+        and os.path.exists(eval_labels_pickle)
     ):
         train_data = pickler.load_pickle(train_pickle)
+        train_labels = pickler.load_pickle(train_labels_pickle)
         eval_files = pickler.load_pickle(eval_files_pickle)
         eval_labels = pickler.load_pickle(eval_labels_pickle)
     else:
@@ -150,12 +160,16 @@ for dir_idx, target_dir in enumerate(dirs):
             power=model_param["feature"]["power"],
         )
 
-        pickler.save_pickle(train_pickle, train_data)
-        pickler.save_pickle(eval_files_pickle, eval_files)
-        pickler.save_pickle(eval_labels_pickle, eval_labels)
+        # pickler.save_pickle(train_pickle, train_data)
+        # pickler.save_pickle(train_labels_pickle, train_labels)
+        # pickler.save_pickle(eval_files_pickle, eval_files)
+        # pickler.save_pickle(eval_labels_pickle, eval_labels)
 
     # model training #
-    model = keras_model(model_param["feature"]["n_mels"] * model_param["feature"]["frames"])
+    model = keras_model(
+        inputDim=model_param["feature"]["n_mels"] * model_param["feature"]["frames"],
+        input=train_data.shape[1],
+    )
     model.summary()
 
     # training #
@@ -165,8 +179,8 @@ for dir_idx, target_dir in enumerate(dirs):
     else:
         model.compile(**model_param["fit"]["compile"])
         history = model.fit(
-            train_data,
-            train_data,
+            train_data[:, :, :, None],
+            train_labels,
             batch_size=model_param["fit"]["batch_size"],
             epochs=model_param["fit"]["epochs"],
             verbose=model_param["fit"]["verbose"],
@@ -181,33 +195,33 @@ for dir_idx, target_dir in enumerate(dirs):
         # visualizer_train.show()
         model.save_weights(model_file)
 
-    # evaluation
-    print("============== EVALUATION ==============")
-    y_pred = [0.0 for k in eval_labels]
-    y_true = eval_labels
-    for num, file_name in tqdm(enumerate(eval_files), total=len(eval_files)):
-        try:
-            data = generate_data.file_to_vector_array(
-                file_name,
-                n_mels=model_param["feature"]["n_mels"],
-                frames=model_param["feature"]["frames"],
-                n_fft=model_param["feature"]["n_fft"],
-                hop_length=model_param["feature"]["hop_length"],
-                power=model_param["feature"]["power"],
-            )
-            error = numpy.mean(numpy.square(data - model.predict(data)), axis=1)
-            y_pred[num] = numpy.mean(error)
-        except:
-            logger.warning("File broken!!: {}".format(file_name))
-    score = metrics.roc_auc_score(y_true, y_pred)
-    logger.info("AUC : {}".format(score))
-    evaluation_result["AUC"] = float(score)
-    results[evaluation_result_key] = evaluation_result
-    print("===========================")
+#     # evaluation
+#     print("============== EVALUATION ==============")
+#     y_pred = [0.0 for k in eval_labels]
+#     y_true = eval_labels
+#     for num, file_name in tqdm(enumerate(eval_files), total=len(eval_files)):
+#         try:
+#             data = generate_data.file_to_vector_array(
+#                 file_name,
+#                 n_mels=model_param["feature"]["n_mels"],
+#                 frames=model_param["feature"]["frames"],
+#                 n_fft=model_param["feature"]["n_fft"],
+#                 hop_length=model_param["feature"]["hop_length"],
+#                 power=model_param["feature"]["power"],
+#             )
+#             error = numpy.mean(numpy.square(data - model.predict(data)), axis=1)
+#             y_pred[num] = numpy.mean(error)
+#         except:
+#             logger.warning("File broken!!: {}".format(file_name))
+#     score = metrics.roc_auc_score(y_true, y_pred)
+#     logger.info("AUC : {}".format(score))
+#     evaluation_result["AUC"] = float(score)
+#     results[evaluation_result_key] = evaluation_result
+#     print("===========================")
 
-# output results
-print("\n===========================")
-logger.info("all results -> {}".format(result_file))
-with open(result_file, "w") as f:
-    f.write(yaml.dump(results, default_flow_style=False))
-print("===========================")
+# # output results
+# print("\n===========================")
+# logger.info("all results -> {}".format(result_file))
+# with open(result_file, "w") as f:
+#     f.write(yaml.dump(results, default_flow_style=False))
+# print("===========================")
