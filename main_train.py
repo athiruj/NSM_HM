@@ -12,7 +12,7 @@ from visualizer import visualizer
 from model import keras_model
 from logger import logger
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 # load parameter yaml
 with open("./config/directory_config.yaml") as stream:
@@ -167,8 +167,7 @@ for dir_idx, target_dir in enumerate(dirs):
 
     # model training #
     model = keras_model(
-        inputDim=model_param["feature"]["n_mels"] * model_param["feature"]["frames"],
-        input=train_data.shape[1],
+        inputDim=model_param["feature"]["n_mels"] * model_param["feature"]["frames"]
     )
     model.summary()
 
@@ -179,8 +178,8 @@ for dir_idx, target_dir in enumerate(dirs):
     else:
         model.compile(**model_param["fit"]["compile"])
         history = model.fit(
-            train_data[:, :, :, None],
-            train_labels,
+            train_data,
+            train_data,
             batch_size=model_param["fit"]["batch_size"],
             epochs=model_param["fit"]["epochs"],
             verbose=model_param["fit"]["verbose"],
@@ -189,8 +188,6 @@ for dir_idx, target_dir in enumerate(dirs):
         )
         visualizer_train = visualizer()
         visualizer_train.loss_plot(history.history["loss"], history.history["val_loss"])
-        # visualizer_train.precision_plot(history.history["precision"], history.history["val_precision"])
-        # visualizer_train.recall_plot(history.history["recall"], history.history["val_recall"])
         visualizer_train.save_figure(history_img)
         # visualizer_train.show()
         model.save_weights(model_file)

@@ -30,7 +30,7 @@ def file_load(wav_name, mono=False):
 
     # Return :
     : numpy.array( float )
-    """ 
+    """
     try:
         y, sr = librosa.load(wav_name, sr=None, mono=mono)
         return y, sr
@@ -156,70 +156,75 @@ def file_to_vector_array(
 ########################################################################
 
 
-# def list_to_vector_array(
-#     file_list, msg="calc...", n_mels=64, frames=5, n_fft=1024, hop_length=512, power=2.0
-# ):
-#     # 01 calculate the number of dimensions
-#     # ๑ คำนวณมิติของชุดข้อมูล
-#     dims = n_mels * frames
-
-#     # 02 loop of file_to_vector_array
-#     # ๒ วนซ้ำฟังชั่น file_to_vector_array เพื่อทำการแปลงไฟล์เป็นชุดข้อมูลเวกเตอร์
-#     for idx in tqdm(range(len(file_list)), desc=msg):
-#         vector_array = file_to_vector_array(
-#             file_list[idx],
-#             n_mels=n_mels,
-#             frames=frames,
-#             n_fft=n_fft,
-#             hop_length=hop_length,
-#             power=power,
-#         )
-#         # ตรวจสอบชุดข้อมูลว่าง
-#         if idx == 0:
-#             dataset = numpy.zeros((vector_array.shape[0] * len(file_list), dims), float)
-
-#         dataset[
-#             vector_array.shape[0] * idx : vector_array.shape[0] * (idx + 1), :
-#         ] = vector_array
-
-#     return dataset
-
-def list_to_vector_array(file_list,
-                         msg="calc...",
-                         n_mels=64,
-                         frames=5,
-                         n_fft=1024,
-                         hop_length=512,
-                         power=2.0):
-  
+def list_to_vector_array(
+    file_list, msg="calc...", n_mels=64, frames=5, n_fft=1024, hop_length=512, power=2.0
+):
     # 01 calculate the number of dimensions
+    # ๑ คำนวณมิติของชุดข้อมูล
     dims = n_mels * frames
 
-    # 02 loop of file_to_vectorarray
-    # for idx in tqdm(range(len(file_list)), desc=msg):
+    # 02 loop of file_to_vector_array
+    # ๒ วนซ้ำฟังชั่น file_to_vector_array เพื่อทำการแปลงไฟล์เป็นชุดข้อมูลเวกเตอร์
     for idx in tqdm(range(len(file_list)), desc=msg):
-
-        vector_array = file_to_vector_array(file_list[idx],
-                                            n_mels=n_mels,
-                                            frames=frames,
-                                            n_fft=n_fft,
-                                            hop_length=hop_length,
-                                            power=power)
-        
-
+        vector_array = file_to_vector_array(
+            file_list[idx],
+            n_mels=n_mels,
+            frames=frames,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            power=power,
+        )
+        # สร้างชุดข้อมูลใหม่ (ชุดข้อมูลเวกเตอร์ * จำนวนไฟล์, ขนาดข้อมูล)
         if idx == 0:
-            dataset = numpy.zeros((len(file_list),vector_array.shape[0], dims), float) #(1418 , 320)
+            dataset = numpy.zeros((vector_array.shape[0] * len(file_list), dims), float)
 
-            print("/n file: {val}".format(val=vector_array.shape))
-            print("/n dataset: {shape}".format(shape=dataset.shape))
-        # 309 * 0 : 309 * 1
-        # dataset[vector_array.shape[0] * idx : vector_array * (idx+1), : ] = vector_array #(309, 320)
-        dataset[idx, : , : ] = vector_array #(309, 320)
-
-        # print("/n dataset: {} : {}".format(idx,dataset[idx:]))
-        # print("/n vector: {} : {}".format(idx,vector_array))
+        dataset[
+            vector_array.shape[0] * idx : vector_array.shape[0] * (idx + 1), :
+        ] = vector_array
 
     return dataset
+
+
+#########################################
+# other way List to vector np array
+#########################################
+
+# def list_to_vector_array(file_list,
+#                          msg="calc...",
+#                          n_mels=64,
+#                          frames=5,
+#                          n_fft=1024,
+#                          hop_length=512,
+#                          power=2.0):
+
+#     # 01 calculate the number of dimensions
+#     dims = n_mels * frames
+
+#     # 02 loop of file_to_vectorarray
+#     # for idx in tqdm(range(len(file_list)), desc=msg):
+#     for idx in tqdm(range(len(file_list)), desc=msg):
+
+#         vector_array = file_to_vector_array(file_list[idx],
+#                                             n_mels=n_mels,
+#                                             frames=frames,
+#                                             n_fft=n_fft,
+#                                             hop_length=hop_length,
+#                                             power=power)
+
+
+#         if idx == 0:
+#             dataset = numpy.zeros((len(file_list),vector_array.shape[0], dims), float) #(1418 , 320)
+
+#             print("/n file: {val}".format(val=vector_array.shape))
+#             print("/n dataset: {shape}".format(shape=dataset.shape))
+#         # 309 * 0 : 309 * 1
+#         # dataset[vector_array.shape[0] * idx : vector_array * (idx+1), : ] = vector_array #(309, 320)
+#         dataset[idx, : , : ] = vector_array #(309, 320)
+
+#         # print("/n dataset: {} : {}".format(idx,dataset[idx:]))
+#         # print("/n vector: {} : {}".format(idx,vector_array))
+
+#     return dataset
 
 
 ########################################################################
@@ -277,7 +282,7 @@ def dataset_generator(
     # train_files = normal_files[len(abnormal_files) :]
     # train_labels = normal_labels[len(abnormal_files) :]
 
-    train_files = numpy.concatenate((abnormal_files, normal_files ),axis=0)
+    train_files = numpy.concatenate((abnormal_files, normal_files), axis=0)
     train_labels = numpy.concatenate((abnormal_labels, normal_labels), axis=0)
 
     eval_files = numpy.concatenate(
